@@ -43,5 +43,6 @@ app.use("/api/user", userRouter);
 // contact router
 app.use("/api/contact", contactRouter);
 
-const port = 3000;
-app.listen(port, () => console.log("server is running on port 1000..."));
+const PORT = process.env.PORT || 1000;
+
+app.listen(PORT, () => console.log("server is running on port 1000..."));
