@@ -1,182 +1,65 @@
-import mongoose from "mongoose";
 import { Contact } from "../Models/Contact.js";
 
-/* =========================
-   GET ALL CONTACTS
-========================= */
 export const getAllContact = async (req, res) => {
-  try {
-    const userContact = await Contact.find();
-
-    if (userContact.length === 0) {
-      return res.status(404).json({
-        message: "No contacts found in database"
-      });
-    }
-
-    res.json({
-      message: "Contacts fetched successfully",
-      userContact
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+  const userContact = await Contact.find();
+  if (!userContact) return res.status(404).json({ message: "no Contact find" });
+  else res.json({ message: "Contact fetched Successfully", userContact });
 };
 
-/* =========================
-   GET CONTACT BY ID
-========================= */
 export const getContactById = async (req, res) => {
   const id = req.params.id;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      message: "Invalid contact ID format"
-    });
-  }
-
-  try {
-    const userContact = await Contact.findById(id);
-
-    if (!userContact) {
-      return res.status(404).json({
-        message: "Contact not found"
-      });
-    }
-
-    res.json({
-      message: "Contact fetched successfully",
-      userContact
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+  const userContact = await Contact.findById(id);
+  if (!userContact) return res.json({ message: "no Contact find" });
+  else res.json({ message: "Contact fetched Successfully", userContact });
 };
 
-/* =========================
-   ADD CONTACT
-========================= */
 export const addContact = async (req, res) => {
   const { name, email, phone, type } = req.body;
-
-  if (!name || !email || !phone) {
-    return res.status(400).json({
-      message: "Name, email and phone are required"
-    });
-  }
-
-  try {
-    const saveContact = await Contact.create({
+  if (name == "" || email == "" || phone == "")
+    return res.status(400).json({ message: "all field are required" });
+  const saveContact = await Contact.create({
+    name,
+    email,
+    phone,
+    type,
+   user: req.user
+  });
+  saveContact.save()
+  res.json({ message: "contact save Successfully", saveContact });
+};
+export const updateContactById = async (req, res) => {
+  const id = req.params.id;
+  const { name, email, phone, type } = req.body;
+  const updateContact = await Contact.findByIdAndUpdate(
+    id,
+    {
       name,
       email,
       phone,
       type,
-      user: req.user   // ✅ FIXED
-    });
+    },
+    { new: true }
+  );
 
-    res.status(201).json({
-      message: "Contact created successfully",
-      saveContact
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+  if (!updateContact)
+    return res.status(404).json({ message: "No Contact find" });
+  res.json({ message: "Contact Updated Successfully", updateContact });
 };
-
-/* =========================
-   UPDATE CONTACT BY ID
-========================= */
-export const updateContactById = async (req, res) => {
-  const id = req.params.id;
-  const { name, email, phone, type } = req.body;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      message: "Invalid contact ID"
-    });
-  }
-
-  try {
-    const updateContact = await Contact.findOneAndUpdate(
-      { _id: id, user: req.user._id },   // ✅ ownership check
-      { name, email, phone, type },
-      { new: true }
-    );
-
-    if (!updateContact) {
-      return res.status(404).json({
-        message: "Contact not found or unauthorized access"
-      });
-    }
-
-    res.json({
-      message: "Contact updated successfully",
-      updateContact
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-/* =========================
-   DELETE CONTACT
-========================= */
 export const deleteContact = async (req, res) => {
   const id = req.params.id;
+  const { name, email, phone, type } = req.body;
+  const deleteContact = await Contact.findByIdAndDelete(id);
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      message: "Invalid contact ID"
-    });
-  }
-
-  try {
-    const deleteContact = await Contact.findOneAndDelete({
-      _id: id,
-      user: req.user._id   // ✅ ownership check
-    });
-
-    if (!deleteContact) {
-      return res.status(404).json({
-        message: "Contact not found or unauthorized access"
-      });
-    }
-
-    res.json({
-      message: "Contact deleted successfully",
-      deleteContact
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+  if (!deleteContact)
+    return res.status(404).json({ message: "No Contact find" });
+  res.json({ message: "Contact deleted Successfully", deleteContact });
 };
 
-/* =========================
-   GET CONTACTS BY USER ID
-========================= */
-export const getContactByUserId = async (req, res) => {
-  const id = req.params.id;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      message: "Invalid user ID"
-    });
-  }
+export const getContactByUserId=async (req,res)=>{
+  const id=req.params.id;
+  let contact=await Contact.find({user:id})
+  if(!contact) return res.json({message:"not found"})
+    res.json({message:"User specific contact",contact})
 
-  try {
-    const contact = await Contact.find({ user: id });
-
-    if (contact.length === 0) {
-      return res.status(404).json({
-        message: "No contacts found for this user"
-      });
-    }
-
-    res.json({
-      message: "User-specific contacts fetched successfully",
-      contact
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+}
