@@ -1,0 +1,12 @@
+import { text } from "express";
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema({
+  name: { type: String, require: true },
+  email: { type: String, unique: true, require: true },
+  password: { type: String, require: true },
+  createdAt: { type: Date, Default: Date.now() },
+
+});
+
+export const User = mongoose.model("user", userSchema);
